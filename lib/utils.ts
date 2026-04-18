@@ -11,3 +11,7 @@ export function deadlineDisplay(deadline: string | null): { text: string; classN
   if (diffDays <= 7) return { text: `${text} · ${diffDays} ימים`, className: 'text-amber-600' }
   return { text, className: 'text-slate-500' }
 }
+
+export function priceDisplay(ils: number): string {
+  return `₪${ils.toLocaleString('he-IL')}`
+}

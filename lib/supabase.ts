@@ -145,3 +145,71 @@ export async function getProjectsByClient(clientId: string): Promise<Project[]> 
   if (error) throw error
   return data
 }
+
+// Vehicles (luxury car rental)
+
+export type VehicleStatus = 'available' | 'rented' | 'maintenance'
+export type VehicleCategory = 'sport' | 'sedan' | 'suv' | 'convertible'
+
+export interface VehicleImage {
+  id: string
+  vehicle_id: string
+  url: string
+  alt_he: string | null
+  sort_order: number
+  created_at: string
+}
+
+export interface Vehicle {
+  id: string
+  brand: string
+  model: string
+  year: number
+  category: VehicleCategory
+  daily_price_ils: number
+  status: VehicleStatus
+  description_he: string | null
+  engine_size: string | null
+  horsepower: number | null
+  zero_to_hundred: number | null
+  top_speed: number | null
+  transmission: string | null
+  seats: number | null
+  fuel_type: string | null
+  cover_image_url: string | null
+  created_at: string
+  images?: VehicleImage[]
+}
+
+export interface VehicleFilters {
+  category?: VehicleCategory
+  available?: boolean
+  priceMin?: number
+  priceMax?: number
+}
+
+export async function getVehicles(filters?: VehicleFilters): Promise<Vehicle[]> {
+  let query = supabase.from('vehicles').select('*')
+
+  if (filters?.category) query = query.eq('category', filters.category)
+  if (filters?.available) query = query.eq('status', 'available')
+  if (filters?.priceMin !== undefined) query = query.gte('daily_price_ils', filters.priceMin)
+  if (filters?.priceMax !== undefined) query = query.lte('daily_price_ils', filters.priceMax)
+
+  const { data, error } = await query.order('created_at', { ascending: false })
+  if (error) throw error
+  return data
+}
+
+export async function getVehicle(id: string): Promise<Vehicle> {
+  const { data, error } = await supabase
+    .from('vehicles')
+    .select('*, images:vehicle_images(*)')
+    .eq('id', id)
+    .single()
+  if (error) throw error
+  if (data?.images) {
+    data.images.sort((a: VehicleImage, b: VehicleImage) => a.sort_order - b.sort_order)
+  }
+  return data
+}
